@@ -1,0 +1,59 @@
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+# Function to determine the best transport mode
+def select_transport_mode(item_type, weight, distance, priority):
+    if priority.lower() == "priority":
+        if distance > 1000:
+            return "Airways (Direct)"
+        elif 200 < distance <= 1000:
+            return "Railways (Direct)"
+        else:
+            return "Roadways (Direct)"
+
+    elif item_type.lower() in ["sanitary ware", "faucets"]:
+        if weight > 30:
+            if distance > 1000:
+                return "Merge (Railways and Roadways)"
+            elif 200 < distance <= 1000:
+                return "Railways"
+            elif 100 < distance <= 200:
+                return "Roadways"
+        else:
+            return "Train + Truck"
+
+    elif item_type.lower() in ["tiles", "other stuff"]:
+        if weight <= 30:
+            if distance > 1000:
+                return "Airways (Direct)"
+            elif 500 < distance <= 1000:
+                return "Railways (Connecting via Transit Hub)"
+            else:
+                return "Roadways (Connecting via Transit Hub)"
+        else:
+            if distance > 1000:
+                return "Airways (Direct)"
+            else:
+                return "Railways (Direct)"
+
+    else:
+        return "Ordinary Delivery (5+ days)"
+
+# Flask routes
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/result', methods=['POST'])
+def result():
+    item_type = request.form['item_type']
+    weight = float(request.form['weight'])
+    distance = float(request.form['distance'])
+    priority = request.form['priority']
+
+    result = select_transport_mode(item_type, weight, distance, priority)
+    return render_template('result.html', result=result)
+
+if __name__ == '__main__':
+    app.run(debug=True)
